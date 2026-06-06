@@ -65,6 +65,31 @@ deepseek-v4-flash 等模型在 tool call 时可能返回中文股票名而非 6 
 - 数据层新增接口遵循 `tradingagents/dataflows/interface.py` 的 vendor 路由模式
 - Web UI 改动在 `web/` 目录，用 `streamlit run web/launch.py` 本地测试
 
+## StockAgent 集成（2026-06-05 ~ 2026-06-06）
+
+本项目的第 8 个 Analyst —— **TradingFramework Analyst**，来自 StockAgents 的交易纪律框架。
+
+### 新增/变更文件（10 个）
+| 文件 | 变更 |
+|------|------|
+| `tradingagents/agents/analysts/trading_framework_analyst.py` | 新增：8 维度 A 股交易纪律分析 |
+| `tradingagents/agents/analysts/social_media_analyst.py` | 用 smart_search_cli 替代 get_guba_sentiment / get_xueqiu_discussions |
+| `tradingagents/agents/analysts/lockup_watcher.py` | 用 smart_search_cli 替代 get_insider_transactions |
+| `tradingagents/agents/analysts/hot_money_tracker.py` | 用 smart_search_cli 替代 get_insider_transactions |
+| `tradingagents/agents/utils/news_data_tools.py` | 新增 smart_search_cli @tool（subprocess 调 npm smart-search CLI）+ 所有工具调用日志 |
+| `tradingagents/agents/utils/tool_log.py` | 新增：LangChain 回调写 tool_calls.jsonl |
+| `tradingagents/graph/trading_graph.py` | 同步 ToolNode 配置 + max_tokens 支持 |
+| `web/runner.py` | 集成 ToolLogCallbackHandler |
+| `web/app.py` | API Key / max_tokens 从 .env 读取 |
+| 其他 4 个 tool 文件 | _logged_vendor_call 包装所有 route_to_vendor |
+
+### 关键教训
+- ⚠️ **改工具必须同步两处**：analyst 的 `tools = [...]` 和 `trading_graph.py` 的 `ToolNode`。不同步 → LLM 调用工具但 ToolNode 无此工具 → 400 错误
+- smart_search_cli 是 subprocess 调 npm 全局 `smart-search` CLI，PATH 查找顺序：`SMART_SEARCH_PATH` 环境变量 → `shutil.which` → `%APPDATA%/npm/smart-search.cmd`
+- 每次 smart_search 调用 60-120s，合并多维度关键词到 1 次调用是关键优化
+- 工具调用日志在 `~/.tradingagents/tool_calls.jsonl`
+
 ## 相关项目
 - [a-stock-data](https://github.com/simonlin1212/a-stock-data) — A 股 MCP 数据服务（Claude Code 用的 skill）
 - 上游 [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents) — 原版框架
+- [StockAgents](https://github.com/...) — 本项目的 StockAgent 来源（狼大/图哥/科技主线坚守指南）
