@@ -49,6 +49,17 @@ def get_language_instruction() -> str:
     return f" Write your entire response in {lang}."
 
 
+def get_smart_search_evidence_instruction() -> str:
+    """Return shared evidence rules for agents that use smart_search_cli."""
+    return (
+        "\n\n📌 smart_search_cli 证据规范："
+        "\n- 同一重要方向尽量用 2-3 组关键词交叉验证；突发事件优先搜索当日/近7日，基本面研报可放宽到近1-3个月。"
+        "\n- 报告中引用 smart_search_cli 结果时必须写明来源 URL、发布时间/日期；缺少来源时标注 [数据缺失: 来源]。"
+        "\n- 明确区分 新闻事实 / 公司公告 / 分析师观点 / 市场传闻，不要把观点或传闻当成事实。"
+        "\n- 与结构化数据工具冲突时，说明冲突点，并降低该结论置信度。"
+    )
+
+
 def build_instrument_context(ticker: str) -> str:
     """Describe the exact instrument so agents preserve exchange-qualified tickers."""
     return (

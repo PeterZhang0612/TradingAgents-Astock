@@ -16,6 +16,7 @@ def create_research_manager(llm):
     def research_manager_node(state) -> dict:
         instrument_context = build_instrument_context(state["company_of_interest"])
         history = state["investment_debate_state"].get("history", "")
+        trading_framework_report = state.get("trading_framework_report", "")
 
         investment_debate_state = state["investment_debate_state"]
 
@@ -24,6 +25,7 @@ def create_research_manager(llm):
 {instrument_context}
 
 Note: This is an A-share (China mainland) stock. Factor in regulatory policy impact, hot money / capital flow dynamics, and lockup expiry / insider reduction risks when synthesising the debate.
+When present, treat the Trading Framework / Discipline Report as the execution-discipline gate: it controls risk-first framing, invalidation conditions, stop-loss logic, and whether the setup is actionable now.
 
 ---
 
@@ -39,7 +41,10 @@ Commit to a clear stance whenever the debate's strongest arguments warrant one; 
 ---
 
 **Debate History:**
-{history}""" + get_language_instruction()
+{history}
+
+**Trading Framework / Discipline Report:**
+{trading_framework_report or '[not provided]'}""" + get_language_instruction()
 
         investment_plan = invoke_structured_or_freetext(
             structured_llm,

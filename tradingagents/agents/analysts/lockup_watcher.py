@@ -3,6 +3,7 @@ from tradingagents.agents.utils.agent_utils import (
     build_instrument_context,
     get_fundamentals,
     get_language_instruction,
+    get_smart_search_evidence_instruction,
     smart_search_cli,
     get_lockup_expiry,
     get_news,
@@ -43,6 +44,9 @@ def create_lockup_watcher(llm):
             "\n- `get_fundamentals`：获取公司股本结构信息"
             "\n- `get_news(query, start_date, end_date)`：搜索解禁/减持相关新闻和公告"
             "\n- `get_lockup_expiry(ticker, curr_date)`：获取限售解禁日历（历史解禁记录+未来90天待解禁计划，含解禁数量/占比/影响评估）"
+            "\n\n📡 smart_search_cli 搜索方向："
+            "\n- 搜索示例：`<股票名> 大股东 减持 内部人交易 限售解禁 股权质押 前十大股东 公告 2026`"
+            "\n- 搜索示例：`<股票名> 解禁 减持计划 公告 股东 2026`"
             "\n\n撰写详细的解禁/减持风险评估报告,给出减持压力总体评级(重大压力/中等压力/轻微压力/无明显压力),并估算潜在减持规模和时间窗口。报告末尾附 Markdown 表格列出关键解禁/减持事件、规模和影响评估。"
             "\n\n📋 必采清单 — 以下数据点必须出现在报告中，无法获取时标注 [数据缺失: xxx]："
             "\n1. 近 6 个月内部人/大股东交易记录（增持/减持/无变动）"
@@ -50,6 +54,7 @@ def create_lockup_watcher(llm):
             "\n3. 解禁/减持相关新闻及公告"
             "\n4. 减持压力评级（重大压力/中等压力/轻微压力/无明显压力）"
             "\n5. 未来 3 个月潜在减持风险评估"
+            + get_smart_search_evidence_instruction()
             + get_language_instruction()
         )
 

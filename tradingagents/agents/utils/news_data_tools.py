@@ -70,18 +70,60 @@ def _logged_vendor_call(tool_name, func_name, *args):
         raise
 
 
+def _format_smart_search_response(data: dict, raw_output: str) -> str:
+    """Format smart-search JSON output while preserving citeable sources."""
+    content = data.get("content") or raw_output
+    sources = []
+    seen_urls = set()
+
+    for bucket_name in ("primary_sources", "extra_sources", "sources"):
+        bucket = data.get(bucket_name) or []
+        if not isinstance(bucket, list):
+            continue
+        for item in bucket:
+            if not isinstance(item, dict):
+                continue
+            url = item.get("url") or item.get("link") or item.get("source_url")
+            if not url or url in seen_urls:
+                continue
+            seen_urls.add(url)
+            title = item.get("title") or item.get("name") or item.get("source") or "Untitled"
+            published = (
+                item.get("published_at")
+                or item.get("publishedDate")
+                or item.get("date")
+                or item.get("time")
+                or "unknown date"
+            )
+            sources.append(f"- [{bucket_name}] {title} | {published} | {url}")
+            if len(sources) >= 8:
+                break
+        if len(sources) >= 8:
+            break
+
+    appendix = ""
+    if sources:
+        appendix = "\n\nSources:\n" + "\n".join(sources)
+
+    max_len = 20000
+    if len(content) + len(appendix) > max_len:
+        content = content[: max_len - len(appendix) - 20] + "\n...[truncated]..."
+    return content + appendix
+
+
 @tool
 def smart_search_cli(
     query: Annotated[str, "Search query string. Use natural language or keywords. For best results, include relevant dates and keywords in Chinese or English"],
 ) -> str:
     """
     Search the web for real-time news, social sentiment, policy updates, and market information using the smart-search CLI.
-    This is the PRIMARY tool for: social media sentiment (X/Twitter, 雪球, 股吧), breaking news,
+    This is the PRIMARY tool for: social media sentiment (X/Twitter, 雪球, 股吧, NGA 大时代), breaking news,
     policy announcements, industry catalysts, lockup expiry news, insider trading rumors,
     and any information not available through structured data APIs.
 
     Use this when:
     - Checking social media sentiment and discussion trends
+    - Observing NGA 大时代 A-share discussions at https://bbs.nga.cn/thread.php?fid=706
     - Searching for recent news about a company, sector, or policy
     - Finding lockup/restricted share expiry announcements
     - Looking for industry catalysts or supply chain updates
@@ -107,9 +149,7 @@ def smart_search_cli(
         )
         if result.returncode == 0:
             data = json.loads(result.stdout)
-            content = data.get("content", result.stdout)
-            if len(content) > 20000:
-                content = content[:20000] + "\n...[truncated]..."
+            content = _format_smart_search_response(data, result.stdout)
             _log_tool("smart_search_cli", query, round((time.time()-t0)*1000), "")
             return content
         else:

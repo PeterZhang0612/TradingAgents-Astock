@@ -31,6 +31,7 @@ def create_portfolio_manager(llm):
         risk_debate_state = state["risk_debate_state"]
         research_plan = state["investment_plan"]
         trader_plan = state["trader_investment_plan"]
+        trading_framework_report = state.get("trading_framework_report", "")
 
         data_quality_summary = state.get("data_quality_summary", "")
         past_context = state.get("past_context", "")
@@ -72,11 +73,19 @@ If any analyst report is flagged as low confidence (Grade C/D/F), reduce its wei
 **Context:**
 - Research Manager's investment plan: **{research_plan}**
 - Trader's transaction proposal: **{trader_plan}**
+- Trading Framework / Discipline Report: **{trading_framework_report or '[not provided]'}**
 {lessons_line}
 **Risk Analysts Debate History:**
 {history}
 
 ---
+
+Final decision discipline:
+- Start from risks and invalidation conditions before stating the opportunity.
+- Use probability-based language; do not use absolute certainty.
+- Include the reverse case: what would make the decision wrong.
+- Include stop-loss / exit logic and a validity horizon for the decision.
+- If the Trading Framework / Discipline Report conflicts with the trader proposal, explain which constraint controls the final call.
 
 Be decisive and ground every conclusion in specific evidence from the analysts.{get_language_instruction()}"""
 

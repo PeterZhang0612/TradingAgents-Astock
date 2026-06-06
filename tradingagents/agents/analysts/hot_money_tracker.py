@@ -7,6 +7,7 @@ from tradingagents.agents.utils.agent_utils import (
     get_hot_stocks,
     get_industry_comparison,
     get_language_instruction,
+    get_smart_search_evidence_instruction,
     smart_search_cli,
     get_news,
     get_northbound_flow,
@@ -31,6 +32,7 @@ def create_hot_money_tracker(llm):
             get_fund_flow,
             get_dragon_tiger_board,
             get_industry_comparison,
+            smart_search_cli,
         ]
 
         system_message = (
@@ -51,7 +53,14 @@ def create_hot_money_tracker(llm):
             "\n\n请使用以下工具："
             "\n- `get_stock_data`：获取 K 线和成交量数据"
             "\n- `get_news(query, start_date, end_date)`：搜索游资/资金流向相关新闻"
-            "\n- `smart_search_cli(query)`：搜索北向资金动态、龙虎榜游资席位、融资融券变化、大股东增减持、板块资金轮动"
+            "\n- `smart_search_cli(query)`：**资金与市场搜索工具**——搜索北向资金动态、龙虎榜游资席位、融资融券变化、大股东增减持、板块资金轮动、大盘整体情绪"
+            "\n\n📡 smart_search_cli 搜索方向（合并查询减少等待）："
+            "\n\n**市场与资金层面（维度2）**："
+            "\n- 搜索示例：`北向资金 2026年6月 流入流出 A股`"
+            "\n- 搜索示例：`融资融券余额 A股 2026年6月`"
+            "\n- 搜索示例：`<股票名> 龙虎榜 2026年6月`"
+            "\n- 搜索示例：`A股 市场情绪 恐慌 2026年6月`"
+            "\n- 搜索示例：`A股 成交量 涨跌家数 涨停 2026年6月`"
             "\n- `get_hot_stocks(curr_date)`：获取当日涨停股 + 题材归因 reason tags（同花顺独家）"
             "\n- `get_northbound_flow(curr_date)`：获取北向资金实时分钟级流向（沪股通+深股通累计净买入）"
             "\n- `get_concept_blocks(ticker)`：获取个股所属概念板块/行业分类/地域（百度股市通，含当日涨幅）"
@@ -66,6 +75,7 @@ def create_hot_money_tracker(llm):
             "\n4. 所属概念板块及当日板块涨幅"
             "\n5. 当日是否上榜热门股及题材归因"
             "\n6. 资金面总体判断"
+            + get_smart_search_evidence_instruction()
             + get_language_instruction()
         )
 

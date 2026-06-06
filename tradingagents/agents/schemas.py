@@ -121,8 +121,28 @@ class TraderProposal(BaseModel):
     reasoning: str = Field(
         description=(
             "The case for this action, anchored in the analysts' reports and "
-            "the research plan. Two to four sentences."
+            "the research plan. Start with the key risk before stating the opportunity. "
+            "Two to four sentences."
         ),
+    )
+    probability_assessment: Optional[str] = Field(
+        default=None,
+        description=(
+            "Probability-based assessment of the short-term setup, e.g. "
+            "'60-70% upside continuation if volume holds; lower if support breaks'."
+        ),
+    )
+    risk_first_summary: Optional[str] = Field(
+        default=None,
+        description="Key risk and why it matters before discussing opportunity.",
+    )
+    invalidation_condition: Optional[str] = Field(
+        default=None,
+        description="Concrete condition that invalidates the proposed trade or thesis.",
+    )
+    reverse_case: Optional[str] = Field(
+        default=None,
+        description="The strongest opposite view and what would make it correct.",
     )
     entry_price: Optional[float] = Field(
         default=None,
@@ -135,6 +155,14 @@ class TraderProposal(BaseModel):
     position_sizing: Optional[str] = Field(
         default=None,
         description="Optional sizing guidance, e.g. '5% of portfolio'.",
+    )
+    stop_loss_plan: Optional[str] = Field(
+        default=None,
+        description="Concrete stop-loss or exit plan, including level and execution condition.",
+    )
+    validity_horizon: Optional[str] = Field(
+        default=None,
+        description="How long this signal remains valid, e.g. '1-5 trading days'.",
     )
 
 
@@ -150,12 +178,24 @@ def render_trader_proposal(proposal: TraderProposal) -> str:
         "",
         f"**Reasoning**: {proposal.reasoning}",
     ]
+    if proposal.risk_first_summary:
+        parts.extend(["", f"**Risk First**: {proposal.risk_first_summary}"])
+    if proposal.probability_assessment:
+        parts.extend(["", f"**Probability Assessment**: {proposal.probability_assessment}"])
+    if proposal.invalidation_condition:
+        parts.extend(["", f"**Invalidation Condition**: {proposal.invalidation_condition}"])
+    if proposal.reverse_case:
+        parts.extend(["", f"**Reverse Case**: {proposal.reverse_case}"])
     if proposal.entry_price is not None:
         parts.extend(["", f"**Entry Price**: {proposal.entry_price}"])
     if proposal.stop_loss is not None:
         parts.extend(["", f"**Stop Loss**: {proposal.stop_loss}"])
     if proposal.position_sizing:
         parts.extend(["", f"**Position Sizing**: {proposal.position_sizing}"])
+    if proposal.stop_loss_plan:
+        parts.extend(["", f"**Stop Loss Plan**: {proposal.stop_loss_plan}"])
+    if proposal.validity_horizon:
+        parts.extend(["", f"**Validity Horizon**: {proposal.validity_horizon}"])
     parts.extend([
         "",
         f"FINAL TRANSACTION PROPOSAL: **{proposal.action.value.upper()}**",
@@ -193,8 +233,29 @@ class PortfolioDecision(BaseModel):
         description=(
             "Detailed reasoning anchored in specific evidence from the analysts' "
             "debate. If prior lessons are referenced in the prompt context, "
-            "incorporate them; otherwise rely solely on the current analysis."
+            "incorporate them; otherwise rely solely on the current analysis. "
+            "Start with risk and invalidation conditions before stating opportunity."
         ),
+    )
+    probability_assessment: Optional[str] = Field(
+        default=None,
+        description="Probability-based assessment of the final decision, avoiding absolute certainty.",
+    )
+    risk_first_summary: Optional[str] = Field(
+        default=None,
+        description="The primary risk, invalidation risk, or constraint that controls the final call.",
+    )
+    invalidation_condition: Optional[str] = Field(
+        default=None,
+        description="Concrete event, level, or evidence that would make the decision wrong.",
+    )
+    reverse_case: Optional[str] = Field(
+        default=None,
+        description="The strongest opposite case and its trigger conditions.",
+    )
+    stop_loss_plan: Optional[str] = Field(
+        default=None,
+        description="Exit or stop-loss logic for the final decision, including specific trigger if available.",
     )
     price_target: Optional[float] = Field(
         default=None,
@@ -203,6 +264,10 @@ class PortfolioDecision(BaseModel):
     time_horizon: Optional[str] = Field(
         default=None,
         description="Optional recommended holding period, e.g. '3-6 months'.",
+    )
+    validity_horizon: Optional[str] = Field(
+        default=None,
+        description="How long the decision remains valid before required reassessment.",
     )
 
 
@@ -221,8 +286,20 @@ def render_pm_decision(decision: PortfolioDecision) -> str:
         "",
         f"**Investment Thesis**: {decision.investment_thesis}",
     ]
+    if decision.risk_first_summary:
+        parts.extend(["", f"**Risk First**: {decision.risk_first_summary}"])
+    if decision.probability_assessment:
+        parts.extend(["", f"**Probability Assessment**: {decision.probability_assessment}"])
+    if decision.invalidation_condition:
+        parts.extend(["", f"**Invalidation Condition**: {decision.invalidation_condition}"])
+    if decision.reverse_case:
+        parts.extend(["", f"**Reverse Case**: {decision.reverse_case}"])
+    if decision.stop_loss_plan:
+        parts.extend(["", f"**Stop Loss Plan**: {decision.stop_loss_plan}"])
     if decision.price_target is not None:
         parts.extend(["", f"**Price Target**: {decision.price_target}"])
     if decision.time_horizon:
         parts.extend(["", f"**Time Horizon**: {decision.time_horizon}"])
+    if decision.validity_horizon:
+        parts.extend(["", f"**Validity Horizon**: {decision.validity_horizon}"])
     return "\n".join(parts)

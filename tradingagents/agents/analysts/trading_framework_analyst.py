@@ -27,6 +27,26 @@ def create_trading_framework_analyst(llm):
             get_global_news,
         ]
 
+        def _clip_report(title, report, limit=2500):
+            if not report:
+                return f"## {title}\n[数据缺失: {title}]"
+            text = str(report).strip()
+            if len(text) > limit:
+                text = text[:limit] + "\n...[truncated]..."
+            return f"## {title}\n{text}"
+
+        prior_reports_context = "\n\n".join(
+            [
+                _clip_report("Market Report", state.get("market_report", "")),
+                _clip_report("Sentiment Report", state.get("sentiment_report", "")),
+                _clip_report("News Report", state.get("news_report", "")),
+                _clip_report("Fundamentals Report", state.get("fundamentals_report", "")),
+                _clip_report("Policy Report", state.get("policy_report", "")),
+                _clip_report("Hot Money Report", state.get("hot_money_report", "")),
+                _clip_report("Lockup Report", state.get("lockup_report", "")),
+            ]
+        )
+
         system_message = (
             """你是一位专精于 A 股交易框架的纪律分析师。你的任务不是重复其他分析师已经输出的技术数据，而是从「交易纪律与框架」维度提供关于该标的的交易层面判断。
 
@@ -105,6 +125,9 @@ def create_trading_framework_analyst(llm):
 | 6 | 反向观点 | 看空逻辑 + 触发条件 |
 
 无法获取的数据标注 `[数据缺失: xxx]`，不要编造。"""
+            + "\n\n## 上游分析师报告（用于交易纪律复核）\n"
+            + prior_reports_context
+            + "\n\n请优先复核上游报告中的证据是否足以支持交易动作；不要机械重复信息采集。若上游报告冲突，明确写出冲突点，并用风险前置、概率化、反向触发条件给出纪律化结论。"
             + get_language_instruction()
         )
 

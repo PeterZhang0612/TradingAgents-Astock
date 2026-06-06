@@ -3,7 +3,9 @@ from tradingagents.agents.utils.agent_utils import (
     build_instrument_context,
     get_global_news,
     get_language_instruction,
+    get_smart_search_evidence_instruction,
     get_news,
+    smart_search_cli,
 )
 from tradingagents.dataflows.config import get_config
 
@@ -18,6 +20,7 @@ def create_policy_analyst(llm):
         tools = [
             get_news,
             get_global_news,
+            smart_search_cli,
         ]
 
         system_message = (
@@ -37,13 +40,41 @@ def create_policy_analyst(llm):
             "\n\n请使用以下工具："
             "\n- `get_news(query, start_date, end_date)`：搜索与公司/行业相关的政策新闻"
             "\n- `get_global_news(curr_date, look_back_days, limit)`：获取宏观经济和政策面新闻"
+            "\n- `smart_search_cli(query)`：**宏观与政策搜索工具**——搜索中国/美国宏观数据、货币政策、产业政策、全球联动事件"
+            "\n\n📡 smart_search_cli 搜索方向（根据情况选择 2-3 个合并查询减少等待，覆盖以下全部子维度）："
+            "\n\n**中国宏观数据**："
+            "\n- 搜索示例：`中国 GDP 2026 增长 数据`"
+            "\n- 搜索示例：`中国 CPI PPI 2026年6月 数据`"
+            "\n- 搜索示例：`中国 PMI 2026年6月 数据`"
+            "\n- 搜索示例：`中国 社融 信贷 2026年6月`"
+            "\n- 搜索示例：`央行 MLF RRR 降准降息 2026`"
+            "\n- 搜索示例：`十五五 规划 产业政策 半导体 自主可控 2026`"
+            "\n\n**美国宏观数据**："
+            "\n- 搜索示例：`美国 非农 就业 2026年6月`"
+            "\n- 搜索示例：`美国 CPI PCE 2026年6月`"
+            "\n- 搜索示例：`美联储 FOMC 利率决议 2026年6月 预期`"
+            "\n- 搜索示例：`美联储 官员 讲话 2026年6月 鹰派 鸽派`"
+            "\n- 搜索示例：`美债收益率曲线 2026年6月`"
+            "\n\n**全球联动**："
+            "\n- 搜索示例：`原油 黄金 铜 大宗商品 2026年6月 价格`"
+            "\n- 搜索示例：`美元指数 人民币汇率 2026年6月`"
+            "\n- 搜索示例：`VIX 恐慌指数 2026年6月`"
+            "\n- 搜索示例：`全球 地缘政治 2026年6月 市场影响`"
+            "\n\n**产业与监管政策专项**："
+            "\n- 搜索示例：`半导体 国产替代 政策 2026`"
+            "\n- 搜索示例：`证监会 IPO 减持新规 2026`"
+            "\n- 搜索示例：`中美关系 出口管制 关税 2026 影响`"
             "\n\n撰写详细的政策分析报告，明确给出政策面对该公司的总体评级（重大利好/利好/中性/利空/重大利空），并量化影响程度。报告末尾附 Markdown 表格列出关键政策事件、影响方向和持续时间。"
             "\n\n📋 必采清单 — 以下数据点必须出现在报告中，无法获取时标注 [数据缺失: xxx]："
             "\n1. 近期相关政策事件清单（含发布日期和发布机构）"
-            "\n2. 行业政策方向判断（扶持/限制/中性）"
-            "\n3. 政策影响力度评级（强/中/弱）"
-            "\n4. 政策影响时间窗口估算"
-            "\n5. 政策面总体评级"
+            "\n2. 中国宏观数据方向（GDP/CPI/PPI/PMI/社融等最新值及趋势）"
+            "\n3. 美国宏观数据（非农/CPI/PCE/美联储利率方向）"
+            "\n4. 全球联动风险信号（大宗商品/美元/VIX/地缘政治）"
+            "\n5. 行业政策方向判断（扶持/限制/中性）"
+            "\n6. 政策影响力度评级（强/中/弱）"
+            "\n7. 政策影响时间窗口估算"
+            "\n8. 政策面总体评级"
+            + get_smart_search_evidence_instruction()
             + get_language_instruction()
         )
 

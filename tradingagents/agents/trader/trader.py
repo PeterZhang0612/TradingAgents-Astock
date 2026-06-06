@@ -26,6 +26,7 @@ def create_trader(llm):
         policy_report = state.get("policy_report", "")
         hot_money_report = state.get("hot_money_report", "")
         lockup_report = state.get("lockup_report", "")
+        trading_framework_report = state.get("trading_framework_report", "")
 
         # Build optional A-stock context block
         astock_context_parts = []
@@ -35,6 +36,10 @@ def create_trader(llm):
             astock_context_parts.append(f"Hot Money / Capital Flow Report:\n{hot_money_report}")
         if lockup_report:
             astock_context_parts.append(f"Lockup Expiry / Insider Reduction Report:\n{lockup_report}")
+        if trading_framework_report:
+            astock_context_parts.append(
+                f"Trading Framework / Discipline Report:\n{trading_framework_report}"
+            )
         astock_context = "\n\n".join(astock_context_parts)
 
         messages = [
@@ -50,6 +55,9 @@ def create_trader(llm):
                     "- Trading hours: 09:30-11:30, 13:00-15:00 Beijing time\n"
                     "Anchor your reasoning in the analysts' reports and the research plan. "
                     "Be specific about entry price, stop loss, and position sizing. "
+                    "When a Trading Framework / Discipline Report is present, treat it as the execution discipline gate. "
+                    "Use risk-first reasoning, probability ranges, reverse-trigger conditions, a concrete stop-loss price, "
+                    "and a clear validity window. "
                     "（以上参数仅供技术研究参考，不构成投资建议）"
                 ),
             },
@@ -62,7 +70,7 @@ def create_trader(llm):
                     f"{instrument_context}\n\n"
                     f"Proposed Investment Plan:\n{investment_plan}\n\n"
                     + (f"Additional A-Stock Analyst Context:\n{astock_context}\n\n" if astock_context else "")
-                    + "Leverage these insights to craft a precise transaction proposal."
+                    + "Leverage these insights to craft a precise transaction proposal. Include risk-first reasoning, probability-based language, reverse-trigger conditions, a stop-loss plan, and a validity horizon."
                     + get_language_instruction()
                 ),
             },

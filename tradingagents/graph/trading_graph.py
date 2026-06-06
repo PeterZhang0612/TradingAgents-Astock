@@ -190,6 +190,7 @@ class TradingAgentsGraph:
                 [
                     get_news,
                     get_global_news,
+                    smart_search_cli,
                 ]
             ),
             "fundamentals": ToolNode(
@@ -206,6 +207,7 @@ class TradingAgentsGraph:
                 [
                     get_news,
                     get_global_news,
+                    smart_search_cli,
                 ]
             ),
             "hot_money": ToolNode(
@@ -218,6 +220,7 @@ class TradingAgentsGraph:
                     get_fund_flow,
                     get_dragon_tiger_board,
                     get_industry_comparison,
+                    smart_search_cli,
                 ]
             ),
             "lockup": ToolNode(
@@ -277,6 +280,39 @@ class TradingAgentsGraph:
             )
             return None, None, None
 
+    def _resolve_pending_entries(self, ticker: str) -> None:
+        """Resolve completed memory-log entries for this ticker.
+
+        Decisions are written as pending at the end of a run. On later runs we
+        try to compute realised return and alpha, ask the reflector for a short
+        lesson, then update the entry. Entries for other tickers are left alone.
+        """
+        pending_entries = self.memory_log.get_pending_entries()
+        for entry in pending_entries:
+            if entry.get("ticker") != ticker:
+                continue
+
+            trade_date = entry.get("date")
+            raw_return, alpha_return, actual_holding_days = self._fetch_returns(
+                ticker, trade_date
+            )
+            if raw_return is None or alpha_return is None or actual_holding_days is None:
+                continue
+
+            reflection = self.reflector.reflect_on_final_decision(
+                entry.get("decision", ""),
+                raw_return,
+                alpha_return,
+            )
+            self.memory_log.update_with_outcome(
+                ticker,
+                trade_date,
+                raw_return,
+                alpha_return,
+                actual_holding_days,
+                reflection,
+            )
+
     def propagate(self, company_name, trade_date):
         """Run the trading agents graph for a company on a specific date."""
         self.ticker = company_name
@@ -318,6 +354,15 @@ class TradingAgentsGraph:
             final_state = trace[-1]
         else:
             final_state = self.graph.invoke(init_agent_state, **args)
+
+        self._log_state(trade_date, final_state)
+        self.memory_log.store_decision(
+            company_name,
+            str(trade_date),
+            final_state["final_trade_decision"],
+            llm_model=self.config.get("deep_think_llm"),
+            data_quality_rating=final_state.get("data_quality_summary"),
+        )
 
         return final_state, self.process_signal(final_state["final_trade_decision"])
 

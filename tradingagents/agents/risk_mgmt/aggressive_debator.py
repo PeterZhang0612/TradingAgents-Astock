@@ -16,6 +16,7 @@ def create_aggressive_debator(llm):
         policy_report = state.get("policy_report", "")
         hot_money_report = state.get("hot_money_report", "")
         lockup_report = state.get("lockup_report", "")
+        trading_framework_report = state.get("trading_framework_report", "")
         northbound_flow = state.get("northbound_flow", "")
         margin_balance = state.get("margin_balance", "")
 
@@ -44,6 +45,7 @@ Company Fundamentals Report: {fundamentals_report}
 Policy Analysis Report: {policy_report}
 Hot Money / Capital Flow Report: {hot_money_report}
 Lockup Expiry / Insider Reduction Report: {lockup_report}
+Trading Framework / Discipline Report: {trading_framework_report}
 Northbound Capital Flow: {northbound_flow}
 Margin Balance (两融): {margin_balance}
 Conversation history: {history} Last conservative argument: {current_conservative_response} Last neutral argument: {current_neutral_response}. If no responses yet, present your own argument.
