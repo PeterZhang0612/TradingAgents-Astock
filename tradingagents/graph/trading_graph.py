@@ -190,7 +190,6 @@ class TradingAgentsGraph:
                 [
                     get_news,
                     get_global_news,
-                    get_insider_transactions,
                 ]
             ),
             "fundamentals": ToolNode(
@@ -213,7 +212,6 @@ class TradingAgentsGraph:
                 [
                     get_stock_data,
                     get_news,
-                    get_insider_transactions,
                     get_hot_stocks,
                     get_northbound_flow,
                     get_concept_blocks,
@@ -224,10 +222,10 @@ class TradingAgentsGraph:
             ),
             "lockup": ToolNode(
                 [
-                    get_insider_transactions,
                     get_news,
                     get_fundamentals,
                     get_lockup_expiry,
+                    smart_search_cli,
                 ]
             ),
             "trading_framework": ToolNode(

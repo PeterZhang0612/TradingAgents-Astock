@@ -2,8 +2,8 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from tradingagents.agents.utils.agent_utils import (
     build_instrument_context,
     get_fundamentals,
-    get_insider_transactions,
     get_language_instruction,
+    smart_search_cli,
     get_lockup_expiry,
     get_news,
 )
@@ -18,10 +18,10 @@ def create_lockup_watcher(llm):
         instrument_context = build_instrument_context(state["company_of_interest"])
 
         tools = [
-            get_insider_transactions,
             get_news,
             get_fundamentals,
             get_lockup_expiry,
+            smart_search_cli,
         ]
 
         system_message = (
@@ -34,12 +34,12 @@ def create_lockup_watcher(llm):
             "\n- **减持动力评估**：当前股价 vs 解禁成本的溢价倍数越高,减持动力越强。若股价低于解禁成本,减持概率大幅降低。"
             "\n- **历史减持行为**：大股东过往减持频率和规模反映其套现意愿。频繁减持的大股东在新一轮解禁时减持概率更高。"
             "\n\n分析方法："
-            "\n1. 调用 get_insider_transactions 获取股东/内部人交易记录和持股变化"
+            "\n1. 用 smart_search_cli 搜索 '<股票名> 大股东 减持 内部人交易 2026' 获取内部人交易动态"
             "\n2. 调用 get_fundamentals 获取公司股本结构和大股东持股比例"
             "\n3. 调用 get_news 搜索解禁、减持计划、股东变动相关公告和新闻"
             "\n4. 综合评估未来 1-3 个月的减持压力等级"
             "\n\n请使用以下工具："
-            "\n- `get_insider_transactions`：获取股东和内部人交易记录"
+            "\n- `smart_search_cli(query)`：搜索大股东减持公告、内部人交易数据、限售解禁信息"
             "\n- `get_fundamentals`：获取公司股本结构信息"
             "\n- `get_news(query, start_date, end_date)`：搜索解禁/减持相关新闻和公告"
             "\n- `get_lockup_expiry(ticker, curr_date)`：获取限售解禁日历（历史解禁记录+未来90天待解禁计划，含解禁数量/占比/影响评估）"

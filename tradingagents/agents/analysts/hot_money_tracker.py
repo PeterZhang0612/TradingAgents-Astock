@@ -6,8 +6,8 @@ from tradingagents.agents.utils.agent_utils import (
     get_fund_flow,
     get_hot_stocks,
     get_industry_comparison,
-    get_insider_transactions,
     get_language_instruction,
+    smart_search_cli,
     get_news,
     get_northbound_flow,
     get_stock_data,
@@ -25,7 +25,6 @@ def create_hot_money_tracker(llm):
         tools = [
             get_stock_data,
             get_news,
-            get_insider_transactions,
             get_hot_stocks,
             get_northbound_flow,
             get_concept_blocks,
@@ -52,6 +51,7 @@ def create_hot_money_tracker(llm):
             "\n\n请使用以下工具："
             "\n- `get_stock_data`：获取 K 线和成交量数据"
             "\n- `get_news(query, start_date, end_date)`：搜索游资/资金流向相关新闻"
+            "\n- `smart_search_cli(query)`：搜索大股东增减持、内部人交易数据、龙虎榜游资席位动向"
             "\n- `get_hot_stocks(curr_date)`：获取当日涨停股 + 题材归因 reason tags（同花顺独家）"
             "\n- `get_northbound_flow(curr_date)`：获取北向资金实时分钟级流向（沪股通+深股通累计净买入）"
             "\n- `get_concept_blocks(ticker)`：获取个股所属概念板块/行业分类/地域（百度股市通，含当日涨幅）"
