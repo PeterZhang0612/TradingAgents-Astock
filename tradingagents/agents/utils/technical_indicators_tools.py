@@ -1,6 +1,7 @@
 from langchain_core.tools import tool
 from typing import Annotated
 from tradingagents.dataflows.interface import route_to_vendor
+from tradingagents.agents.utils.news_data_tools import _logged_vendor_call
 
 @tool
 def get_indicators(

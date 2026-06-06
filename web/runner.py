@@ -72,13 +72,15 @@ def _run(ticker: str, trade_date: str, config: dict, tracker: ProgressTracker) -
     """Execute the full pipeline in the current thread."""
     from cli.stats_handler import StatsCallbackHandler
     from tradingagents.graph.trading_graph import TradingAgentsGraph
+    from tradingagents.agents.utils.tool_log import ToolLogCallbackHandler
 
     stats = StatsCallbackHandler()
+    tool_log = ToolLogCallbackHandler()
 
     graph = TradingAgentsGraph(
         debug=True,
         config=config,
-        callbacks=[stats],
+        callbacks=[stats, tool_log],
     )
 
     init_state = graph.propagator.create_initial_state(ticker, trade_date)

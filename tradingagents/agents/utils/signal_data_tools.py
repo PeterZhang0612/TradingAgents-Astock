@@ -1,6 +1,7 @@
 from langchain_core.tools import tool
 from typing import Annotated
 from tradingagents.dataflows.interface import route_to_vendor
+from tradingagents.agents.utils.news_data_tools import _logged_vendor_call
 
 
 @tool
@@ -16,7 +17,7 @@ def get_profit_forecast(
     Returns:
         str: Consensus forecast report with valuation metrics
     """
-    return route_to_vendor("get_profit_forecast", ticker)
+    return _logged_vendor_call("get_profit_forecast", "get_profit_forecast", ticker)
 
 
 @tool
@@ -33,7 +34,7 @@ def get_hot_stocks(
     Returns:
         str: Hot stocks list with reason tags and theme frequency
     """
-    return route_to_vendor("get_hot_stocks", curr_date)
+    return _logged_vendor_call("get_hot_stocks", "get_hot_stocks", curr_date)
 
 
 @tool
@@ -54,7 +55,7 @@ def get_northbound_flow(
     Returns:
         str: Northbound capital flow report with bullish/bearish signal
     """
-    return route_to_vendor("get_northbound_flow", curr_date, include_history)
+    return _logged_vendor_call("get_northbound_flow", "get_northbound_flow", curr_date, include_history)
 
 
 @tool
@@ -71,7 +72,7 @@ def get_concept_blocks(
     Returns:
         str: Concept and sector block membership with daily changes
     """
-    return route_to_vendor("get_concept_blocks", ticker)
+    return _logged_vendor_call("get_concept_blocks", "get_concept_blocks", ticker)
 
 
 @tool
@@ -94,7 +95,7 @@ def get_fund_flow(
     Returns:
         str: Fund flow report with main force signal
     """
-    return route_to_vendor("get_fund_flow", ticker, curr_date, include_history)
+    return _logged_vendor_call("get_fund_flow", "get_fund_flow", ticker, curr_date, include_history)
 
 
 @tool
@@ -114,7 +115,7 @@ def get_dragon_tiger_board(
     Returns:
         str: LHB appearances with seat details and institutional activity
     """
-    return route_to_vendor("get_dragon_tiger_board", ticker, curr_date, look_back_days)
+    return _logged_vendor_call("get_dragon_tiger_board", "get_dragon_tiger_board", ticker, curr_date, look_back_days)
 
 
 @tool
@@ -134,7 +135,7 @@ def get_lockup_expiry(
     Returns:
         str: Lockup expiry schedule with impact assessment
     """
-    return route_to_vendor("get_lockup_expiry", ticker, curr_date, forward_days)
+    return _logged_vendor_call("get_lockup_expiry", "get_lockup_expiry", ticker, curr_date, forward_days)
 
 
 @tool
@@ -152,7 +153,7 @@ def get_industry_comparison(
     Returns:
         str: Industry performance ranking with key metrics
     """
-    return route_to_vendor("get_industry_comparison", ticker, curr_date)
+    return _logged_vendor_call("get_industry_comparison", "get_industry_comparison", ticker, curr_date)
 
 
 @tool
@@ -168,7 +169,7 @@ def get_margin_balance(
     Returns:
         str: Margin balance report
     """
-    return route_to_vendor("get_margin_balance", ticker)
+    return _logged_vendor_call("get_margin_balance", "get_margin_balance", ticker)
 
 
 @tool

@@ -4,6 +4,7 @@ from tradingagents.dataflows.interface import route_to_vendor
 import subprocess
 import json
 import os
+import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,37 @@ def _find_smart_search():
 
 _SMART_SEARCH_CMD = _find_smart_search()
 
+
+def _log_tool(tool_name, params, elapsed_ms, error):
+    """Write a tool-call entry to the shared JSONL log."""
+    try:
+        log_dir = os.path.join(os.path.expanduser("~"), ".tradingagents")
+        os.makedirs(log_dir, exist_ok=True)
+        entry = json.dumps({
+            "ts": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "tool": tool_name,
+            "params": str(params)[:300],
+            "elapsed_ms": elapsed_ms,
+            "error": str(error)[:200] if error else "",
+        }, ensure_ascii=False)
+        with open(os.path.join(log_dir, "tool_calls.jsonl"), "a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except Exception:
+        pass
+
+
+def _logged_vendor_call(tool_name, func_name, *args):
+    """Call route_to_vendor with timing and error logging."""
+    t0 = time.time()
+    try:
+        result = route_to_vendor(func_name, *args)
+        _log_tool(tool_name, str(args)[:300], round((time.time()-t0)*1000), "")
+        return result
+    except Exception as e:
+        _log_tool(tool_name, str(args)[:300], round((time.time()-t0)*1000), str(e)[:200])
+        raise
+
+
 @tool
 def smart_search_cli(
     query: Annotated[str, "Search query string. Use natural language or keywords. For best results, include relevant dates and keywords in Chinese or English"],
@@ -63,40 +95,47 @@ def smart_search_cli(
     if not _SMART_SEARCH_CMD:
         return "smart-search CLI not found. Install with: npm install -g smart-search-cli"
 
+    t0 = time.time()
     try:
         result = subprocess.run(
-            [_SMART_SEARCH_CMD, "search", query, "--extra-sources", "2", "--timeout", "90", "--format", "json"],
+            [_SMART_SEARCH_CMD, "search", query, "--extra-sources", "2", "--timeout", "150", "--format", "json"],
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=120,
+            timeout=180,
         )
         if result.returncode == 0:
             data = json.loads(result.stdout)
             content = data.get("content", result.stdout)
             if len(content) > 20000:
                 content = content[:20000] + "\n...[truncated]..."
+            _log_tool("smart_search_cli", query, round((time.time()-t0)*1000), "")
             return content
         else:
             try:
                 result2 = subprocess.run(
-                    [_SMART_SEARCH_CMD, "search", query, "--timeout", "60", "--format", "content"],
+                    [_SMART_SEARCH_CMD, "search", query, "--timeout", "100", "--format", "content"],
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
                     errors="replace",
-                    timeout=90,
+                    timeout=120,
                 )
                 output = result2.stdout.strip()
                 if len(output) > 20000:
                     output = output[:20000] + "\n...[truncated]..."
+                _log_tool("smart_search_cli", query, round((time.time()-t0)*1000), "")
                 return output
             except Exception:
-                return f"smart-search error: {result.stderr[:500]}"
+                err = f"smart-search fallback error: {result.stderr[:500]}"
+                _log_tool("smart_search_cli", query, round((time.time()-t0)*1000), err[:200])
+                return err
     except subprocess.TimeoutExpired:
-        return "smart-search timed out after 120s. Try a shorter or more specific query."
+        _log_tool("smart_search_cli", query, round((time.time()-t0)*1000), "timeout")
+        return "smart-search timed out after 60s."
     except Exception as e:
+        _log_tool("smart_search_cli", query, round((time.time()-t0)*1000), str(e)[:200])
         return f"smart-search error: {str(e)[:500]}"
 
 @tool
@@ -115,7 +154,7 @@ def get_news(
     Returns:
         str: A formatted string containing news data
     """
-    return route_to_vendor("get_news", ticker, start_date, end_date)
+    return _logged_vendor_call("get_news", "get_news", ticker, start_date, end_date)
 
 @tool
 def get_global_news(
@@ -133,7 +172,7 @@ def get_global_news(
     Returns:
         str: A formatted string containing global news data
     """
-    return route_to_vendor("get_global_news", curr_date, look_back_days, limit)
+    return _logged_vendor_call("get_global_news", "get_global_news", curr_date, look_back_days, limit)
 
 @tool
 def get_insider_transactions(
@@ -147,7 +186,7 @@ def get_insider_transactions(
     Returns:
         str: A report of insider transaction data
     """
-    return route_to_vendor("get_insider_transactions", ticker)
+    return _logged_vendor_call("get_insider_transactions", "get_insider_transactions", ticker)
 
 
 @tool
@@ -163,7 +202,7 @@ def get_guba_sentiment(
     Returns:
         str: Guba discussion sentiment report
     """
-    return route_to_vendor("get_guba_sentiment", ticker)
+    return _logged_vendor_call("get_guba_sentiment", "get_guba_sentiment", ticker)
 
 
 @tool
@@ -181,4 +220,4 @@ def get_xueqiu_discussions(
     Returns:
         str: Xueqiu discussion report
     """
-    return route_to_vendor("get_xueqiu_discussions", ticker, days)
+    return _logged_vendor_call("get_xueqiu_discussions", "get_xueqiu_discussions", ticker, days)
